@@ -220,12 +220,17 @@ class TimerApp:
         timer = self.timers[index]
         current_time = time.time()
         if current_time - timer.last_notification >= 60:
-            notification.notify(
-                title=f"{timer.name} Expired!",
-                message=f"{timer.name} has completed!",
-                app_name="TimeBoss",
-                timeout=10
-            )
+            if self.root and self.root.winfo_ismapped():
+                # Show notification only if the main window is visible
+                notification.notify(
+                    title=f"{timer.name} Expired!",
+                    message=f"{timer.name} has completed!",
+                    app_name="TimeBoss",
+                    timeout=10
+                )
+            else:
+                # Show notification through the tray icon
+                self.icon.notify(f"{timer.name} Expired!")
             timer.last_notification = current_time
 
     def check_expired_timers(self):
@@ -233,8 +238,8 @@ class TimerApp:
         for timer in self.timers:
             if timer.is_expired and current_time - timer.last_notification >= 60:
                 self.show_notification(timer.index)
-        if self.root:
-            self.root.after(1000, self.check_expired_timers)
+                timer.last_notification = current_time
+        self.root.after(1000, self.check_expired_timers)
 
     def create_tray_icon(self):
         image = Image.new('RGB', (64, 64), color = (255, 0, 0))
