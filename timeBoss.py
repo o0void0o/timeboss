@@ -7,6 +7,17 @@ import pystray
 from PIL import Image
 import pickle
 import os
+from PIL import Image, ImageTk
+import sys
+
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 class Timer:
     def __init__(self, app, index):
@@ -53,7 +64,20 @@ class TimerApp:
     def __init__(self):
         self.timers = [Timer(self, i) for i in range(10)]
         self.root = None
-        self.icon = None
+       # Handle icon setting for both Windows and other platforms
+        try:
+            icon_path = get_resource_path("kk.ico")
+            if os.path.exists(icon_path):
+                if sys.platform == "win32":
+                    # For Windows, use the .ico file
+                    self.wm_iconbitmap(icon_path)
+                else:
+                    # For other platforms, convert ico to PhotoImage
+                    icon = Image.open(icon_path)
+                    photo = ImageTk.PhotoImage(icon)
+                    self.wm_iconphoto(True, photo)
+        except Exception as e:
+            print(f"Could not load icon: {e}")
         self.create_tray_icon()
 
     def create_widgets(self):
